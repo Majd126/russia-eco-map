@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russia Ecological Map</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        /* Make sure the map fills the whole screen */
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100%; background: #e5e5e5; }
+
+        /* Floating Slider Box */
+        .slider-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        input[type=range] { width: 100%; cursor: pointer; }
+        
+        .admin-link {
+            position: absolute;
+            top: 10px; right: 10px; z-index: 1000;
+            background: white; padding: 8px 12px;
+            text-decoration: none; color: #333;
+            font-weight: bold; border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+    
+    <a href="https://docs.google.com/spreadsheets/d/1_jcf-k_YxSmpqoxlcOwbvNMNyXTvKuvMBNtMJo4GgWA/edit" target="_blank" class="admin-link">📝 Edit Data</a>
+
+    <div class="slider-container">
+        <h3>Year: <span id="year-display">2025</span></h3>
+        <input type="range" id="year-slider" min="1900" max="2025" value="2025" step="1">
+        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #555;">Drag to travel through time</p>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <script>
+        // YOUR LINK IS PRE-FILLED HERE:
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShfuV2sjxNs17O0xF4isCVklmArYv_PHteFYMXYTFozQ1Iwkkt4cPVkU8fbSXNqXy2WBn1qKflrda3/pub?output=csv';
+
+        // Initialize Map
+        // Note: I centered it slightly West to ensure you see Chernobyl immediately
+        const map = L.map('map').setView([55, 50], 4);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap, &copy; CartoDB',
+            maxZoom: 19
+        }).addTo(map);
+
+        let allEvents = [];
+        let markers = [];
+
+        // Load Data
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                console.log("Data Loaded:", results.data);
+                
+                allEvents = results.data.map(item => {
+                    return {
+                        title: item.Title,
+                        year: parseInt(item.Year),
+                        lat: parseFloat(item.Lat),
+                        lng: parseFloat(item.Lng),
+                        desc: item.Description,
+                        img: item.ImageURL
+                    };
+                }).filter(e => !isNaN(e.year) && !isNaN(e.lat)); // Clean bad data
+
+                updateMap(2025);
+            },
+            error: function(err) {
+                alert("Error loading Google Sheet: " + err.message);
+            }
+        });
+
+        function updateMap(year) {
+            document.getElementById('year-display').innerText = year;
+            
+            // Clear old markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            // Filter events
+            const visibleEvents = allEvents.filter(e => e.year <= year);
+
+            visibleEvents.forEach(e => {
+                const marker = L.marker([e.lat, e.lng]).addTo(map);
+                
+                let popup = `<b>${e.title} (${e.year})</b><br>`;
+                if(e.img && e.img.startsWith('http')) {
+                    popup += `<img src="${e.img}" style="width:100%; margin-top:5px; border-radius:4px;"><br>`;
+                }
+                popup += `<span style="font-size:0.9em">${e.desc}</span>`;
+                
+                marker.bindPopup(popup);
+                markers.push(marker);
+            });
+        }
+
+        document.getElementById('year-slider').addEventListener('input', (e) => {
+            updateMap(e.target.value);
+        });
+    </script>
+</body>
+</html>
