@@ -7,14 +7,14 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujlQ3t0tM2a6iV14bC7o+0ZJ9M+I7w5a+6t4o/VwK2E4/S/6G/y8M/o8F8f/v5g/h/2f+6d+6g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <style>
-        /* --- MODERN DARK THEME --- */
+        /* --- BASE STYLING --- */
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #1a1a1a; color: white; }
-        
         #map { height: 100vh; width: 100%; background: #222; z-index: 1; }
 
-        /* Floating UI Panel */
+        /* --- UI PANEL --- */
         .ui-panel {
             position: absolute;
             bottom: 40px;
@@ -32,11 +32,10 @@
             text-align: center;
             transition: all 0.3s ease;
         }
-
         h3 { margin: 0 0 15px 0; font-weight: 300; letter-spacing: 1px; }
         #year-display { font-weight: 600; color: #ff4444; }
 
-        /* Custom Slider Styling */
+        /* --- SLIDER STYLING --- */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -50,15 +49,17 @@
             cursor: pointer;
             margin-top: -8px;
             box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            transition: background 0.2s ease;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px;
             cursor: pointer;
             background: #444;
             border-radius: 2px;
+            transition: background 0.2s ease;
         }
 
-        /* Admin Link - Minimalist */
+        /* --- ADMIN LINK --- */
         .admin-link {
             position: absolute; top: 20px; right: 20px; z-index: 1000;
             background: rgba(0,0,0,0.6); color: #aaa;
@@ -68,29 +69,63 @@
         }
         .admin-link:hover { background: #ff4444; color: white; border-color: #ff4444; }
 
-        /* --- POPUP STYLING --- */
+        /* --- THEME TOGGLE BUTTON --- */
+        .theme-toggle-container {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Positioned left for now, can be adjusted */
+            z-index: 1000;
+            background: rgba(0,0,0,0.6);
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            display: flex;
+        }
+        .theme-toggle-button {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .theme-toggle-button.active {
+            background: #333;
+            color: white;
+        }
+        .theme-toggle-button:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* --- POPUP STYLING (DYNAMIC SIZE) --- */
         .leaflet-popup-content-wrapper {
             background: #1e1e1e;
             color: #eee;
             border-radius: 8px;
             border: 1px solid #333;
+            /* Max height and scroll if content is too long */
+            max-height: 80vh; 
+            overflow-y: auto;
         }
         .leaflet-popup-tip { background: #1e1e1e; }
         
-        /* Fix Popup Size & Images */
         .leaflet-popup-content {
-            min-width: 250px;
-            max-width: 300px;
+            /* Removed fixed width to allow dynamic sizing */
+            padding: 15px; /* Adjust padding as needed */
             font-family: 'Inter', sans-serif;
             line-height: 1.5;
+            word-wrap: break-word; /* Ensure text wraps */
         }
         .popup-img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
+            max-width: 100%; /* Image will scale down if too wide */
+            height: auto; /* Maintain aspect ratio */
+            display: block; /* Remove extra space below image */
             border-radius: 6px;
-            margin-top: 8px;
-            background: #333;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            background: #333; /* Placeholder background */
         }
         .death-toll-tag {
             display: inline-block;
@@ -102,18 +137,70 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
+
+        /* --- LIGHT MODE SPECIFIC STYLES --- */
+        body.light-mode .ui-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: #333;
+        }
+        body.light-mode h3 { color: #333; }
+        body.light-mode #year-display { color: #cc3333; } /* Lighter red for light mode */
+        body.light-mode input[type=range]::-webkit-slider-thumb {
+            background: #cc3333;
+            box-shadow: 0 0 10px rgba(204, 51, 51, 0.5);
+        }
+        body.light-mode input[type=range]::-webkit-slider-runnable-track {
+            background: #ccc;
+        }
+        body.light-mode .admin-link {
+            background: rgba(255,255,255,0.6); color: #666;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        body.light-mode .admin-link:hover { background: #cc3333; color: white; border-color: #cc3333; }
+        body.light-mode .theme-toggle-container {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        body.light-mode .theme-toggle-button { color: #666; }
+        body.light-mode .theme-toggle-button.active {
+            background: #ddd;
+            color: #333;
+        }
+        body.light-mode .theme-toggle-button:hover:not(.active) {
+            background: rgba(0,0,0,0.1);
+            color: #333;
+        }
+
+        body.light-mode .leaflet-popup-content-wrapper {
+            background: #fcfcfc;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        body.light-mode .leaflet-popup-tip { background: #fcfcfc; }
+        body.light-mode .death-toll-tag {
+            background: #ffd9d9;
+            color: #b00000;
+        }
+
     </style>
 </head>
 <body>
 
     <div id="map"></div>
     
-    <a href="https://docs.google.com/spreadsheets/d/1QkGjvJs9oKRxO12Whb6Cy8vKo7YJuXK6fJH1tr6cnOc/edit?usp=sharing" target="_blank" class="admin-link">⚙️ Редактировать данные</a>
+    <a href="https://docs.google.com/spreadsheets/d/1QkGjvJs9oKRxO12Whb6Cy8vKo7YJuXK6fJH1tr6cnOc/edit?usp=sharing" target="_blank" class="admin-link">⚙️ Edit Data</a>
+
+    <div class="theme-toggle-container">
+        <button id="dark-mode-btn" class="theme-toggle-button active" title="Dark Mode"><i class="fas fa-moon"></i></button>
+        <button id="light-mode-btn" class="theme-toggle-button" title="Light Mode"><i class="fas fa-sun"></i></button>
+    </div>
 
     <div class="ui-panel">
-        <h3>ДАТА: <span id="year-display">2025</span></h3>
+        <h3>TIMELINE: <span id="year-display">2025</span></h3>
         <input type="range" id="year-slider" min="1900" max="2025" value="2025" step="1">
-        <p style="margin: 10px 0 0 0; font-size: 0.8em; color: #888;">Перетаскивайте ползунок, чтобы визуализировать события</p>
+        <p style="margin: 10px 0 0 0; font-size: 0.8em; color: #888;">Drag slider to visualize events</p>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -123,14 +210,21 @@
         // 1. CONFIGURATION
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShfuV2sjxNs17O0xF4isCVklmArYv_PHteFYMXYTFozQ1Iwkkt4cPVkU8fbSXNqXy2WBn1qKflrda3/pub?output=csv';
 
-        // 2. DARK MAP SETUP
-        // We use 'CartoDB Dark Matter' for that cool modern look
+        // 2. MAP SETUP
         const map = L.map('map').setView([60, 90], 3);
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        let currentTileLayer;
+        let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap, &copy; CartoDB',
             maxZoom: 19
-        }).addTo(map);
+        });
+        let lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap, &copy; CartoDB',
+            maxZoom: 19
+        });
+
+        // Initialize with dark mode
+        currentTileLayer = darkTiles.addTo(map);
+        document.body.classList.remove('light-mode');
 
         let allEvents = [];
         let markers = [];
@@ -149,7 +243,7 @@
                         lng: parseFloat(item.Lng),
                         desc: item.Description,
                         img: item.ImageURL,
-                        // Convert empty or bad numbers to 0
+                        // Clean 'DeathToll' from commas before parsing
                         deaths: item.DeathToll ? parseInt(item.DeathToll.replace(/,/g, '')) : 0 
                     };
                 }).filter(e => !isNaN(e.year) && !isNaN(e.lat));
@@ -158,26 +252,23 @@
             }
         });
 
-        // 4. CALCULATE CIRCLE SIZE
-        // Logic: Minimum size 6px + Square Root of deaths (scaled down)
-        // This prevents 10,000 deaths from covering the entire screen
+        // 4. CALCULATE CIRCLE SIZE (Halved)
+        // Minimum size 4px + Square Root of deaths (scaled down by 0.25)
         function getRadius(deaths) {
-            if (!deaths || deaths === 0) return 6; // Default small dot
-            return 6 + (Math.sqrt(deaths) * 0.5);
+            if (!deaths || deaths === 0) return 4; // Default smallest dot
+            return 4 + (Math.sqrt(deaths) * 0.25); // Halved the multiplier
         }
 
         // 5. UPDATE VISUALS
         function updateMap(year) {
             document.getElementById('year-display').innerText = year;
             
-            // Remove old markers
             markers.forEach(m => map.removeLayer(m));
             markers = [];
 
             const visibleEvents = allEvents.filter(e => e.year <= year);
 
             visibleEvents.forEach(e => {
-                // Create Circle Marker (Fixed pixel size relative to screen, not geography)
                 const circle = L.circleMarker([e.lat, e.lng], {
                     radius: getRadius(e.deaths),
                     fillColor: "#ff4444",
@@ -189,9 +280,9 @@
 
                 // Modern Popup Content
                 let popupHTML = `
-                    <div class="death-toll-tag">⚠ Deaths: ${e.deaths.toLocaleString()}</div>
-                    <h3 style="margin:5px 0; color:white;">${e.title} (${e.year})</h3>
-                    <p style="margin:5px 0; font-size:0.9em; color:#ccc;">${e.desc}</p>
+                    ${e.deaths > 0 ? `<div class="death-toll-tag">⚠ Deaths: ${e.deaths.toLocaleString()}</div>` : ''}
+                    <h3 style="margin:5px 0; color:inherit;">${e.title} (${e.year})</h3>
+                    <p style="margin:5px 0; font-size:0.9em; color:inherit;">${e.desc}</p>
                 `;
                 
                 if(e.img && e.img.startsWith('http')) {
@@ -203,11 +294,34 @@
             });
         }
 
-        // Slider Listener
+        // 6. EVENT LISTENERS
         document.getElementById('year-slider').addEventListener('input', (e) => {
             updateMap(e.target.value);
         });
+
+        const darkModeBtn = document.getElementById('dark-mode-btn');
+        const lightModeBtn = document.getElementById('light-mode-btn');
+
+        darkModeBtn.addEventListener('click', () => setMapTheme('dark'));
+        lightModeBtn.addEventListener('click', () => setMapTheme('light'));
+
+        function setMapTheme(theme) {
+            if (theme === 'dark' && currentTileLayer !== darkTiles) {
+                map.removeLayer(currentTileLayer);
+                darkTiles.addTo(map);
+                currentTileLayer = darkTiles;
+                document.body.classList.remove('light-mode');
+                darkModeBtn.classList.add('active');
+                lightModeBtn.classList.remove('active');
+            } else if (theme === 'light' && currentTileLayer !== lightTiles) {
+                map.removeLayer(currentTileLayer);
+                lightTiles.addTo(map);
+                currentTileLayer = lightTiles;
+                document.body.classList.add('light-mode');
+                lightModeBtn.classList.add('active');
+                darkModeBtn.classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html>
-
