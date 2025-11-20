@@ -82,7 +82,11 @@
         
         #side-panel.open { left: 0; }
 
-        .panel-content { padding: 30px; position: relative; }
+        .panel-content { 
+            padding: 30px; 
+            padding-top: 60px; /* Give space for the close button */
+            position: relative; /* For image positioning */
+        }
         
         .close-btn {
             position: absolute;
@@ -97,12 +101,14 @@
         }
         .close-btn:hover { color: white; }
 
+        /* --- IMAGE FIX: FULL SIZE, SCROLL IF NEEDED --- */
         .panel-img {
-            width: 100%;
+            max-width: 100%; /* Image will scale down if too wide */
+            height: auto; /* Maintain aspect ratio (no cropping) */
+            display: block; /* Remove extra space below image */
             border-radius: 8px;
             margin-bottom: 20px;
-            object-fit: cover;
-            max-height: 300px;
+            background: #333; /* Placeholder background */
         }
 
         .panel-title { font-size: 24px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.2; }
@@ -170,15 +176,91 @@
         body.light-mode input[type=range]::-webkit-slider-runnable-track { background: #ddd; }
 
         /* --- CUSTOM ZOOM CONTROL POSITIONING --- */
-        .leaflet-control-zoom { display: none; } /* Hide default, we will move it manually */
+        .leaflet-control-zoom { 
+            position: relative; /* Allow it to stack within flex container */
+            margin-bottom: 10px; /* Space it from other controls */
+        }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+            background-color: rgba(0,0,0,0.7) !important;
+            color: #eee !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            border-radius: 50% !important; /* Make them round */
+            width: 38px !important;
+            height: 38px !important;
+            line-height: 38px !important; /* Center icon */
+            font-size: 24px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            display: flex; /* Center +/- text */
+            justify-content: center;
+            align-items: center;
+        }
+        .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+            background-color: #ff4444 !important;
+            border-color: #ff4444 !important;
+            color: white !important;
+        }
+        .leaflet-bar a:first-child { border-top-left-radius: 50% !important; border-top-right-radius: 50% !important; }
+        .leaflet-bar a:last-child { border-bottom-left-radius: 50% !important; border-bottom-right-radius: 50% !important; }
+        .leaflet-bar a + a { margin-top: 5px !important; } /* Space between + and - */
+        .leaflet-bar {
+            background: none !important; /* Remove default bar background */
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* Space between the buttons */
+        }
+        /* Light mode for zoom buttons */
+        body.light-mode .leaflet-control-zoom-in, body.light-mode .leaflet-control-zoom-out {
+            background-color: rgba(255,255,255,0.9) !important;
+            color: #333 !important;
+            border-color: rgba(0,0,0,0.1) !important;
+        }
+        body.light-mode .leaflet-control-zoom-in:hover, body.light-mode .leaflet-control-zoom-out:hover {
+            background-color: #ff4444 !important;
+            border-color: #ff4444 !important;
+            color: white !important;
+        }
 
+        /* --- MEDIA QUERIES FOR SMALL SCREENS --- */
+        @media (max-width: 768px) {
+            #side-panel {
+                width: 100%;
+                height: 50vh;
+                top: 100%; /* Hidden by default at bottom */
+                left: 0;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+                transition: top 0.3s ease;
+                border-top: 1px solid #333;
+                border-right: none;
+            }
+            #side-panel.open { top: 50vh; }
+            #map { margin-left: 0; } /* Map doesn't shift on mobile */
+            .ui-panel { width: 95%; bottom: 10px; } /* Adjust timeline for mobile */
+            .top-right-controls { top: 10px; right: 10px; gap: 5px; }
+            .admin-link, .theme-toggle { padding: 5px 10px; font-size: 11px; }
+            .theme-btn { padding: 5px 8px; font-size: 14px; }
+            .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+                width: 32px !important; height: 32px !important;
+                line-height: 32px !important; font-size: 20px !important;
+            }
+            .panel-content { padding: 20px; padding-top: 50px; }
+            .close-btn { top: 10px; right: 10px; font-size: 20px; }
+            .panel-title { font-size: 20px; }
+            .panel-year { font-size: 16px; }
+            .panel-desc { font-size: 14px; }
+            .death-toll-badge { font-size: 0.8em; }
+        }
     </style>
 </head>
 <body>
 
     <div id="side-panel">
-        <button class="close-btn" onclick="closePanel()">&times;</button>
         <div class="panel-content" id="panel-content">
+            <button class="close-btn" onclick="closePanel()">&times;</button>
             </div>
     </div>
 
@@ -186,6 +268,15 @@
     
     <div class="top-right-controls">
         
+        <div class="leaflet-control-container">
+            <div class="leaflet-top leaflet-right">
+                <div class="leaflet-control-zoom leaflet-bar leaflet-control">
+                    <a class="leaflet-control-zoom-in" href="#" title="Увеличить" role="button" aria-label="Увеличить">+</a>
+                    <a class="leaflet-control-zoom-out" href="#" title="Уменьшить" role="button" aria-label="Уменьшить">-</a>
+                </div>
+            </div>
+        </div>
+
         <div class="theme-toggle">
             <button id="light-mode-btn" class="theme-btn" title="Светлая тема"><i class="fas fa-sun"></i></button>
             <button id="dark-mode-btn" class="theme-btn active" title="Темная тема"><i class="fas fa-moon"></i></button>
@@ -206,18 +297,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
-        // CONFIG
+        // CONFIGURATION
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShfuV2sjxNs17O0xF4isCVklmArYv_PHteFYMXYTFozQ1Iwkkt4cPVkU8fbSXNqXy2WBn1qKflrda3/pub?output=csv';
 
-        // MAP SETUP - ZOOM CONTROL DISABLED INITIALLY
-        const map = L.map('map', { zoomControl: false }).setView([60, 90], 3);
-        
-        // MOVE ZOOM CONTROL TO TOP RIGHT
-        L.control.zoom({
-            position: 'topright'
-        }).addTo(map);
+        // MAP SETUP - ZOOM CONTROL IS NOW CUSTOM PLACED
+        const map = L.map('map', { zoomControl: false }).setView([60, 90], 3); // Disable default zoom control
 
-        // LAYERS
+        // Leaflet.js automatically creates the zoom control if you add L.control.zoom to the map.
+        // We capture its elements to apply custom styling and place it in our custom container.
+        const zoomControl = L.control.zoom({ position: 'topright' }).addTo(map);
+        document.querySelector('.top-right-controls').prepend(zoomControl.getContainer()); // Move to our custom container
+        
+        // LAYERS (Tiles)
         let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap, &copy; CartoDB',
             maxZoom: 19
@@ -227,11 +318,11 @@
             maxZoom: 19
         });
 
-        let currentLayer = darkTiles.addTo(map);
+        let currentLayer = darkTiles.addTo(map); // Default to dark mode
         let allEvents = [];
         let markers = [];
 
-        // LOAD DATA
+        // DATA LOADING
         Papa.parse(CSV_URL, {
             download: true,
             header: true,
@@ -249,19 +340,25 @@
                     };
                 }).filter(e => !isNaN(e.year) && !isNaN(e.lat));
 
-                updateMap(2025);
+                updateMap(2025); // Initial map update
+            },
+            error: function(err) {
+                console.error("Error loading Google Sheet:", err);
+                alert("Ошибка загрузки данных с Google Таблицы. Убедитесь, что таблица опубликована для доступа в интернет.");
             }
         });
 
+        // CIRCLE SIZE LOGIC
         function getRadius(deaths) {
             if (!deaths || deaths === 0) return 5; 
             return 5 + (Math.sqrt(deaths) * 0.25); 
         }
 
+        // MAP UPDATE FUNCTION
         function updateMap(year) {
             document.getElementById('year-display').innerText = year;
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
+            markers.forEach(m => map.removeLayer(m)); // Clear existing markers
+            markers = []; // Reset markers array
             const visibleEvents = allEvents.filter(e => e.year <= year);
 
             visibleEvents.forEach(e => {
@@ -274,7 +371,7 @@
                     fillOpacity: 0.7
                 }).addTo(map);
 
-                // CLICK EVENT: OPEN SIDE PANEL
+                // Attach click listener to open the side panel
                 circle.on('click', () => {
                     openPanel(e);
                 });
@@ -288,9 +385,12 @@
             const panel = document.getElementById('side-panel');
             const content = document.getElementById('panel-content');
             
+            // Clear previous content but keep the close button
+            content.innerHTML = `<button class="close-btn" onclick="closePanel()">&times;</button>`; 
+
             let html = '';
             if(data.img && data.img.startsWith('http')) {
-                html += `<img src="${data.img}" class="panel-img">`;
+                html += `<img src="${data.img}" class="panel-img" alt="${data.title}">`;
             }
             
             if(data.deaths > 0) {
@@ -303,7 +403,7 @@
                 <p class="panel-desc">${data.desc}</p>
             `;
             
-            content.innerHTML = html;
+            content.innerHTML += html; // Append new content after the close button
             panel.classList.add('open');
         }
 
@@ -311,31 +411,34 @@
             document.getElementById('side-panel').classList.remove('open');
         }
 
+        // EVENT LISTENERS
         document.getElementById('year-slider').addEventListener('input', (e) => {
             updateMap(e.target.value);
         });
 
-        // THEME SWITCHER
         const lightBtn = document.getElementById('light-mode-btn');
         const darkBtn = document.getElementById('dark-mode-btn');
 
-        lightBtn.addEventListener('click', () => {
-            map.removeLayer(currentLayer);
-            lightTiles.addTo(map);
-            currentLayer = lightTiles;
-            document.body.classList.add('light-mode');
-            lightBtn.classList.add('active');
-            darkBtn.classList.remove('active');
-        });
+        function setMapTheme(theme) {
+            if (theme === 'dark' && currentLayer !== darkTiles) {
+                map.removeLayer(currentLayer);
+                darkTiles.addTo(map);
+                currentLayer = darkTiles;
+                document.body.classList.remove('light-mode');
+                darkBtn.classList.add('active');
+                lightBtn.classList.remove('active');
+            } else if (theme === 'light' && currentLayer !== lightTiles) {
+                map.removeLayer(currentLayer);
+                lightTiles.addTo(map);
+                currentLayer = lightTiles;
+                document.body.classList.add('light-mode');
+                lightBtn.classList.add('active');
+                darkBtn.classList.remove('active');
+            }
+        }
 
-        darkBtn.addEventListener('click', () => {
-            map.removeLayer(currentLayer);
-            darkTiles.addTo(map);
-            currentLayer = darkTiles;
-            document.body.classList.remove('light-mode');
-            darkBtn.classList.add('active');
-            lightBtn.classList.remove('active');
-        });
+        lightBtn.addEventListener('click', () => setMapTheme('light'));
+        darkBtn.addEventListener('click', () => setMapTheme('dark'));
 
     </script>
 </body>
