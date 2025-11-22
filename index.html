@@ -246,10 +246,12 @@
         
         // LAYERS
         let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap, &copy; CartoDB', maxZoom: 19
+            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
+            maxZoom: 19
         });
         let lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap, &copy; CartoDB', maxZoom: 19
+            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
+            maxZoom: 19
         });
 
         let currentLayer = darkTiles.addTo(map);
