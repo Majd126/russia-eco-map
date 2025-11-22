@@ -45,8 +45,8 @@
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            align-items: flex-end; /* Align to the right */
-            gap: 12px; /* Space between groups */
+            align-items: flex-end;
+            gap: 12px;
         }
 
         /* 1. EDIT BUTTON */
@@ -224,8 +224,8 @@
         </div>
 
         <div class="custom-zoom-controls">
-            <button class="zoom-btn" onclick="map.zoomIn()" title="Увеличить"><i class="fas fa-plus"></i></button>
-            <button class="zoom-btn" onclick="map.zoomOut()" title="Уменьшить"><i class="fas fa-minus"></i></button>
+            <button id="zoom-in" class="zoom-btn" title="Увеличить"><i class="fas fa-plus"></i></button>
+            <button id="zoom-out" class="zoom-btn" title="Уменьшить"><i class="fas fa-minus"></i></button>
         </div>
     </div>
 
@@ -241,16 +241,21 @@
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShfuV2sjxNs17O0xF4isCVklmArYv_PHteFYMXYTFozQ1Iwkkt4cPVkU8fbSXNqXy2WBn1qKflrda3/pub?output=csv';
 
-        // DISABLE DEFAULT ZOOM CONTROLS
-        const map = L.map('map', { zoomControl: false }).setView([60, 90], 3);
+        // 1. FIX: REMOVE ATTRIBUTION CONTROL (Hides Leaflet Logo/Flag)
+        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([60, 90], 3);
         
+        // 2. FIX: CONNECT ZOOM BUTTONS SECURELY
+        // This prevents the map from stopping/freezing
+        document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
+        document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
+
         // LAYERS
         let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
+            attribution: '', 
             maxZoom: 19
         });
         let lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
+            attribution: '', 
             maxZoom: 19
         });
 
