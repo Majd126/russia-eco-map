@@ -241,16 +241,16 @@
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShfuV2sjxNs17O0xF4isCVklmArYv_PHteFYMXYTFozQ1Iwkkt4cPVkU8fbSXNqXy2WBn1qKflrda3/pub?output=csv';
 
-        // FIX: Added attributionControl: false to remove Leaflet logo/flag
-        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([60, 90], 3);
+        // DISABLE DEFAULT ZOOM CONTROLS
+        const map = L.map('map', { zoomControl: false }).setView([60, 90], 3);
         
-        // LAYERS (Attribution set to empty string for completeness, although setting attributionControl: false is the main fix)
+        // LAYERS
         let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', 
+            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
             maxZoom: 19
         });
         let lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', 
+            attribution: '', // <-- REMOVED ATTRIBUTION TEXT HERE
             maxZoom: 19
         });
 
@@ -279,4 +279,80 @@
 
         function getRadius(deaths) {
             if (!deaths || deaths === 0) return 5; 
-            return 5 + (Math.sqrt(deaths) * 0
+            return 5 + (Math.sqrt(deaths) * 0.25); 
+        }
+
+        function updateMap(year) {
+            document.getElementById('year-display').innerText = year;
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            const visibleEvents = allEvents.filter(e => e.year <= year);
+
+            visibleEvents.forEach(e => {
+                const circle = L.circleMarker([e.lat, e.lng], {
+                    radius: getRadius(e.deaths),
+                    fillColor: "#ff4444", color: "#ff0000",
+                    weight: 1, opacity: 1, fillOpacity: 0.7
+                }).addTo(map);
+                circle.on('click', () => { openPanel(e); });
+                markers.push(circle);
+            });
+        }
+
+        function openPanel(data) {
+            const panel = document.getElementById('side-panel');
+            const content = document.getElementById('panel-content');
+            
+            content.innerHTML = `<button class="close-btn" onclick="closePanel()">&times;</button>`; 
+
+            let html = '';
+            if(data.img && data.img.startsWith('http')) {
+                html += `<img src="${data.img}" class="panel-img" alt="${data.title}">`;
+            }
+            if(data.deaths > 0) {
+                html += `<div class="death-toll-badge">⚠️ Погибших: ${data.deaths.toLocaleString('ru-RU')}</div>`;
+            }
+
+            html += `
+                <h2 class="panel-title">${data.title}</h2>
+                <span class="panel-year">${data.year} год</span>
+                <p class="panel-desc">${data.desc}</p>
+            `;
+            content.innerHTML += html;
+            panel.classList.add('open');
+        }
+
+        function closePanel() {
+            document.getElementById('side-panel').classList.remove('open');
+        }
+
+        document.getElementById('year-slider').addEventListener('input', (e) => {
+            updateMap(e.target.value);
+        });
+
+        const lightBtn = document.getElementById('light-mode-btn');
+        const darkBtn = document.getElementById('dark-mode-btn');
+
+        function setMapTheme(theme) {
+            if (theme === 'dark' && currentLayer !== darkTiles) {
+                map.removeLayer(currentLayer);
+                darkTiles.addTo(map);
+                currentLayer = darkTiles;
+                document.body.classList.remove('light-mode');
+                darkBtn.classList.add('active');
+                lightBtn.classList.remove('active');
+            } else if (theme === 'light' && currentLayer !== lightTiles) {
+                map.removeLayer(currentLayer);
+                lightTiles.addTo(map);
+                currentLayer = lightTiles;
+                document.body.classList.add('light-mode');
+                lightBtn.classList.add('active');
+                darkBtn.classList.remove('active');
+            }
+        }
+
+        lightBtn.addEventListener('click', () => setMapTheme('light'));
+        darkBtn.addEventListener('click', () => setMapTheme('dark'));
+    </script>
+</body>
+</html>
